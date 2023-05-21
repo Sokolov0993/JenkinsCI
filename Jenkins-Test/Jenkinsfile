@@ -1,0 +1,53 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('SCM checkout') {
+            steps {
+                git 'https://github.com/Sokolov0993/Jenkins-Test'
+            }
+        }
+        
+        stage('Compile-Package') {
+            environment {
+                mvnHome = tool name: '3.8.5', type: 'maven'
+            }
+            steps {
+                bat "${mvnHome}\\bin\\mvn.cmd package"
+            }
+        }
+        
+        stage('Test') {
+            environment {
+                mvnHome = tool name: '3.8.5', type: 'maven'
+            }
+            steps {
+                bat "${mvnHome}\\bin\\mvn.cmd test"
+            }
+            
+            post {
+                always {
+                    script {
+                        def testResults = junit '**/target/surefire-reports/*.xml'
+                        if (testResults != null) {
+                            def totalCount = testResults.totalCount
+                            def passedCount = totalCount - testResults.failCount - testResults.skipCount
+                            def failedCount = testResults.failCount
+                            def skippedCount = testResults.skipCount
+                            
+                            def message = "Tests total: ${totalCount}\n" +
+                                          "Passed tests: ${passedCount}\n" +
+                                          "Failed tests: ${failedCount}\n" +
+                                          "Skipped tests: ${skippedCount}\n" +
+                                          "Jenkins build: ${env.BUILD_URL}"
+                            
+                            slackSend channel: 'project', message: message
+                        }
+                    }
+                }
+            }
+        }
+        
+    
+    }
+}
