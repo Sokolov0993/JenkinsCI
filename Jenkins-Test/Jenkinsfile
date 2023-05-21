@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('SCM checkout') {
             steps {
-                git 'https://github.com/Sokolov0993/Jenkins-Test'
+                git 'https://github.com/Sokolov0993/JenkinsCI'
             }
         }
         
